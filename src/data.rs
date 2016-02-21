@@ -35,26 +35,14 @@ impl FlightRecord {
 
 impl Decodable for FlightRecord {
     fn decode<D: Decoder>(d: &mut D) -> Result<Self, D::Error> {
-        #[derive(Debug, RustcDecodable)]
-        struct Core {
-            carrier: String,
-            origin: String,
-            destination: String,
-            departure_delay: Option<i32>,
-            arrival_delay: Option<i32>,
-            cancelled: i32,
-            distance: i32,
-        }
-
-        let core = try!(Core::decode(d));
         Ok(FlightRecord {
-            carrier: core.carrier,
-            origin: core.origin,
-            destination: core.destination,
-            departure_delay: core.departure_delay,
-            arrival_delay: core.arrival_delay,
-            cancelled: core.cancelled != 0,
-            distance: core.distance,
+            carrier: try!(d.read_str()),
+            origin: try!(d.read_str()),
+            destination: try!(d.read_str()),
+            departure_delay: d.read_i32().ok().map(|value| Some(value)).unwrap_or(None),
+            arrival_delay: d.read_i32().ok().map(|value| Some(value)).unwrap_or(None),
+            cancelled: try!(d.read_i32().map(|value| value != 0)),
+            distance: try!(d.read_i32()),
         })
     }
 }
