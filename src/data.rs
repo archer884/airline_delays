@@ -24,11 +24,11 @@ impl FlightRecord {
         &self.destination
     }
 
-    pub fn departure_delay(&self) -> &Option<i32> {
-        &self.departure_delay
+    pub fn departure_delay(&self) -> Option<i32> {
+        self.departure_delay
     }
 
-    pub fn arrival_delay(&self) -> &Option<i32> {
-        &self.arrival_delay
+    pub fn arrival_delay(&self) -> Option<i32> {
+        self.arrival_delay
     }
 }

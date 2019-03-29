@@ -15,3 +15,4 @@ These items are necessary before we can actually start making any big changes.
 These items update the function of the program to be more in line with my current understanding of best practices and new additions to the language.
 
 1. Run cargo clippy.
+2. Return `Option<i32>`, not `&Option<i32>`.
