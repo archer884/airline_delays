@@ -13,7 +13,7 @@ fn execute(command: &Command) {
     if let Ok(mut reader) = csv::Reader::from_path(command.path()) {
         let flight_records: Vec<_> = reader
             .deserialize()
-            .flat_map(|record| record.ok())
+            .flat_map(Result::ok)
             .collect();
 
         print_delays_by_airline(&flight_records, &command.origin(), &command.destination());
@@ -29,7 +29,7 @@ fn print_delays_by_airline(records: &[FlightRecord], origin: &str, destination: 
         .filter(|record| is_valid_flight(record, &origin, &destination))
         .fold(HashMap::new(), |mut map, record| {
             map.entry(record.carrier())
-                .or_insert(Vec::new())
+                .or_insert_with(Vec::new)
                 .push(record);
             map
         });
@@ -61,7 +61,7 @@ fn print_delays(airline: &str, records: &[&FlightRecord]) {
 fn print_worst_airports(records: &[FlightRecord]) {
     let origins = records.iter().fold(HashMap::new(), |mut map, record| {
         map.entry(record.origin())
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(record);
         map
     });
@@ -86,7 +86,7 @@ fn print_worst_airports(records: &[FlightRecord]) {
 
     let destinations = records.iter().fold(HashMap::new(), |mut map, record| {
         map.entry(record.origin())
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(record);
         map
     });
