@@ -1,28 +1,18 @@
-extern crate csv;
-extern crate rustc_serialize;
-
-use std::cmp::Ordering;
-use std::collections::HashMap;
-
 mod command;
 mod data;
 
-use command::Command;
-use data::FlightRecord;
+use crate::{command::Command, data::FlightRecord};
+use std::cmp::Ordering;
+use std::collections::HashMap;
 
 fn main() {
-    match Command::from_args(std::env::args().skip(1)) {
-        Err(e) => {
-            println!("bad command: {:?}", e);
-            std::process::exit(1);
-        },
-        Ok(command) => execute(&command)
-    }
+    execute(&Command::from_args());
 }
 
 fn execute(command: &Command) {
-    if let Ok(mut reader) = csv::Reader::from_file(command.path()) {
-        let flight_records: Vec<_> = reader.decode()
+    if let Ok(mut reader) = csv::Reader::from_path(command.path()) {
+        let flight_records: Vec<_> = reader
+            .deserialize()
             .flat_map(|record| record.ok())
             .collect();
 
@@ -34,10 +24,13 @@ fn execute(command: &Command) {
 fn print_delays_by_airline(records: &[FlightRecord], origin: &str, destination: &str) {
     let origin = origin.to_uppercase();
     let destination = destination.to_uppercase();
-    let records = records.iter()
+    let records = records
+        .iter()
         .filter(|record| is_valid_flight(record, &origin, &destination))
         .fold(HashMap::new(), |mut map, record| {
-            map.entry(record.carrier()).or_insert(Vec::new()).push(record);
+            map.entry(record.carrier())
+                .or_insert(Vec::new())
+                .push(record);
             map
         });
 
@@ -47,51 +40,73 @@ fn print_delays_by_airline(records: &[FlightRecord], origin: &str, destination: 
 }
 
 fn print_delays(airline: &str, records: &[&FlightRecord]) {
-    let (count, total, max) = records.iter()
-        .fold((0, 0, 0), |(count, total, max), record| (
-            count + 1,
-            total + record.arrival_delay().unwrap_or(0),
-            std::cmp::max(max, record.arrival_delay().unwrap_or(0))
-        ));
+    let (count, total, max) = records
+        .iter()
+        .fold((0, 0, 0), |(count, total, max), record| {
+            (
+                count + 1,
+                total + record.arrival_delay().unwrap_or(0),
+                std::cmp::max(max, record.arrival_delay().unwrap_or(0)),
+            )
+        });
 
-    println!("{} Avg/Max delay: {:.2}/{}", airline, total as f32 / count as f32, max);
+    println!(
+        "{} Avg/Max delay: {:.2}/{}",
+        airline,
+        total as f32 / count as f32,
+        max
+    );
 }
 
 fn print_worst_airports(records: &[FlightRecord]) {
     let origins = records.iter().fold(HashMap::new(), |mut map, record| {
-        map.entry(record.origin()).or_insert(Vec::new()).push(record);
+        map.entry(record.origin())
+            .or_insert(Vec::new())
+            .push(record);
         map
     });
 
-    let mut origin_delays: Vec<_> = origins.iter().map(|(key, group)| {
-        let (count, total) = group.iter().fold((0, 0), |(count, total), record| (
-            count + 1,
-            total + record.departure_delay().unwrap_or(0),
-        ));
-        (key, total as f32 / count as f32)
-    }).collect();
+    let mut origin_delays: Vec<_> = origins
+        .iter()
+        .map(|(key, group)| {
+            let (count, total) = group.iter().fold((0, 0), |(count, total), record| {
+                (count + 1, total + record.departure_delay().unwrap_or(0))
+            });
+            (key, total as f32 / count as f32)
+        })
+        .collect();
 
     origin_delays.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
     if let Some(worst_delay) = origin_delays.last() {
-        println!("Worst average departure delay: {} ({:.2})", worst_delay.0, worst_delay.1);
+        println!(
+            "Worst average departure delay: {} ({:.2})",
+            worst_delay.0, worst_delay.1
+        );
     }
 
     let destinations = records.iter().fold(HashMap::new(), |mut map, record| {
-        map.entry(record.origin()).or_insert(Vec::new()).push(record);
+        map.entry(record.origin())
+            .or_insert(Vec::new())
+            .push(record);
         map
     });
 
-    let mut destination_delays: Vec<_> = destinations.iter().map(|(key, group)| {
-        let (count, total) = group.iter().fold((0, 0), |(count, total), record| (
-            count + 1,
-            total + record.arrival_delay().unwrap_or(0),
-        ));
-        (key, total as f32 / count as f32)
-    }).collect();
+    let mut destination_delays: Vec<_> = destinations
+        .iter()
+        .map(|(key, group)| {
+            let (count, total) = group.iter().fold((0, 0), |(count, total), record| {
+                (count + 1, total + record.arrival_delay().unwrap_or(0))
+            });
+            (key, total as f32 / count as f32)
+        })
+        .collect();
 
     destination_delays.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
     if let Some(worst_delay) = destination_delays.last() {
-        println!("Worst average arrival delay: {} ({:.2})", worst_delay.0, worst_delay.1);
+        println!(
+            "Worst average arrival delay: {} ({:.2})",
+            worst_delay.0, worst_delay.1
+        );
     }
 }
 

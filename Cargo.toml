@@ -1,8 +1,10 @@
 [package]
 name = "airline_delays"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["J/A <archer884@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-csv = "0.14.3"
-rustc-serialize = "0.3.16"
+csv = "1.0"
+serde = { version = "1.0", features = ["serde_derive"] }
+structopt = "0.2"
