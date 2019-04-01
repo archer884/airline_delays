@@ -2,12 +2,21 @@ use serde::Deserialize;
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct FlightRecord {
+    #[serde(rename = "OP_UNIQUE_CARRIER")]
     carrier: String,
+    #[serde(rename = "ORIGIN_CITY_NAME")]
     origin: String,
+    #[serde(rename = "DEST_CITY_NAME")]
     destination: String,
+    #[serde(rename = "DEP_DELAY")]
     departure_delay: Option<i32>,
+    #[serde(rename = "ARR_DELAY")]
     arrival_delay: Option<i32>,
-    cancelled: bool,
+    #[serde(rename = "CANCELLED")]
+    cancelled: u8,
+    #[serde(rename = "CANCELLATION_CODE")]
+    cancellation_code: Option<String>,
+    #[serde(rename = "DISTANCE")]
     distance: i32,
 }
 

@@ -16,3 +16,4 @@ These items update the function of the program to be more in line with my curren
 
 1. Run cargo clippy.
 2. Return `Option<i32>`, not `&Option<i32>`.
+3. Fix deserialization.

@@ -10,7 +10,13 @@ fn main() {
 }
 
 fn execute(command: &Command) {
-    if let Ok(mut reader) = csv::Reader::from_path(command.path()) {
+    use csv::ReaderBuilder;
+
+    let reader = ReaderBuilder::new()
+        .has_headers(true)
+        .from_path(command.path());
+
+    if let Ok(mut reader) = reader {
         let flight_records: Vec<_> = reader
             .deserialize()
             .flat_map(Result::ok)
